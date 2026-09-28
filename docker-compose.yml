@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Production Service (Default)
+  # ============================================
+  lumino-dental:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lumino-dental-website
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - lumino-network
+
+  # ============================================
+  # Development Service (Hot Reload)
+  # Usage: docker compose --profile dev up
+  # ============================================
+  lumino-dental-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: lumino-dental-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+    environment:
+      - NODE_ENV=development
+    networks:
+      - lumino-network
+    profiles:
+      - dev
+
+networks:
+  lumino-network:
+    driver: bridge
